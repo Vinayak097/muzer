@@ -9,7 +9,6 @@ export const UpvoteSchema =z.object({
 
 export async function POST(request:NextRequest){
     const session  =  await getServerSession();
-    
     const user=await client.user.findFirst({
         where:{
             email : session?.user?.email ?? ""
@@ -25,6 +24,7 @@ export async function POST(request:NextRequest){
     }
     try{
         const data= UpvoteSchema.parse(await request.json());
+        
         await client.upvote.create({
             data:{
                 userId:user.id,

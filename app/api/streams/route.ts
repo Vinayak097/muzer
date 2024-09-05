@@ -1,9 +1,9 @@
 import { client } from "@/app/lib/db";
+import { Console } from "console";
 import { NextRequest, NextResponse } from "next/server";
 //@ts-ignore
 import youtubesearchapi from 'youtube-search-api';
 import z from 'zod'
-
 
 const CreateStreamSchema = z.object({
     creatorId: z.string(),
@@ -11,11 +11,12 @@ const CreateStreamSchema = z.object({
 });
 
 const MAX_QUEUE_LEN = 20;
-const youtubeRegex= new RegExp("https:\/\/(?:www\\.)?youtu(?:\\.be|be\\.com)\\/(?:watch\\?v=|embed\\/|v\\/|\\S*\\/)?([\\w\\-]{11})(?:\\?\\S*)?");
+export const YT_REGEX = /^(?:(?:https?:)?\/\/)?(?:www\.)?(?:m\.)?(?:youtu(?:be)?\.com\/(?:v\/|embed\/|watch(?:\/|\?v=))|youtu\.be\/)((?:\w|-){11})(?:\S+)?$/;
+
 export async function POST(req: NextRequest) {
     try {
         const data = CreateStreamSchema.parse(await req.json());
-        const isYt = data.url.match(youtubeRegex)
+        const isYt = data.url.match(YT_REGEX)
         if (!isYt) {
             return NextResponse.json({
                 message: "Wrong URL format"
@@ -23,12 +24,18 @@ export async function POST(req: NextRequest) {
                 status: 411
             })    
         }
-
+        const match = data.url.match(YT_REGEX);
         const extractedId = data.url.split("?v=")[1];
+if (!extractedId) {
+    return NextResponse.json({ message: "Invalid YouTube video ID" }, { status: 400 });
+}
 
+        
+        console.log('extraid ',extractedId)
         const res = await youtubesearchapi.GetVideoDetails(extractedId);
 
         const thumbnails = res.thumbnail.thumbnails;
+
         thumbnails.sort((a: {width: number}, b: {width: number}) => a.width < b.width ? -1 : 1);
 
         const existingActiveStream = await client.stream.count({
@@ -50,7 +57,7 @@ export async function POST(req: NextRequest) {
                 userId: data.creatorId,
                 url: data.url,
                 extractedId,
-                type: "Youtube",
+                type:"YouTube",
                 title: res.title ?? "Cant find video",
                 smallImg: (thumbnails.length > 1 ? thumbnails[thumbnails.length - 2].url : thumbnails[thumbnails.length - 1].url) ?? "https://cdn.pixabay.com/photo/2024/02/28/07/42/european-shorthair-8601492_640.jpg",
                 bigImg: thumbnails[thumbnails.length - 1].url ?? "https://cdn.pixabay.com/photo/2024/02/28/07/42/european-shorthair-8601492_640.jpg"
@@ -73,6 +80,7 @@ export async function POST(req: NextRequest) {
 
 }
 
+
 export async function GET(request:NextRequest){
     const creatorId=request.nextUrl.searchParams.get("creatorId")
 
@@ -80,6 +88,9 @@ export async function GET(request:NextRequest){
         where:{
             userId: creatorId ?? ""
         }
+    })
+    return NextResponse.json({
+        streams
     })
 }
 

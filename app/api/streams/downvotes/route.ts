@@ -2,7 +2,7 @@ import { client } from '@/app/lib/db';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { UpvoteSchema } from '../upvotes/route';
-export async function POST(request:NextRequest) {
+export async function POST(request:NextRequest){
     const session  =  await getServerSession();
     const user=await client.user.findFirst({
         where:{

@@ -23,10 +23,13 @@ model User {
 }
 
 model Stream {
-  id String     @id @default(uuid())
+  id String @id @default(uuid())
+  title String
   type StreamType
   active Boolean  @default(true)
   upvotes Upvote[]
+  smallImg      String     @default("")
+  bigImg        String     @default("")
   url String
   extractedId String
   userId String 
