@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { UpvoteSchema } from '../upvotes/route';
 export async function POST(request:NextRequest) {
     const session  =  await getServerSession();
-    
     const user=await client.user.findFirst({
         where:{
             email :session?.user?.email ?? ""
@@ -24,10 +23,11 @@ export async function POST(request:NextRequest) {
                 userId_streamId:{
                     userId:user.id,
                     streamId:data.streamId
-
                 }                
-                
             }
+        })
+        return NextResponse.json({
+            message:"upvote deleted"
         })
     }catch(e){
         return NextResponse.json({
@@ -36,5 +36,4 @@ export async function POST(request:NextRequest) {
             status:403
         })
     }
-
 }
