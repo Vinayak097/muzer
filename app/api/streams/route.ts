@@ -77,18 +77,17 @@ if (!extractedId) {
             status: 411
         })
     }
-
 }
 
 
 export async function GET(request:NextRequest){
     const creatorId=request.nextUrl.searchParams.get("creatorId")
-
     const streams= await client.stream.findMany({
         where:{
             userId: creatorId ?? ""
         }
     })
+    console.log(streams)
     return NextResponse.json({
         streams
     })
